@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GridPoint Energy — NERC CIP Compliance Program · Executive Dashboard</title>
+<style>
+  :root{
+    --paper:#f7f7f4; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --baseline:#c3c2b7; --hair:rgba(11,11,11,0.10);
+    --navy:#1f3864; --navy2:#33507f; --accent:#256abf;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+    --sev-high:#d03b3b; --sev-mod:#eda100; --sev-low:#0ca30c;
+    --blue:#256abf; --blue-l:#86b6ef;
+    --shadow:0 1px 2px rgba(11,11,11,.05),0 8px 24px rgba(11,11,11,.05);
+  }
+  :root[data-theme="dark"]{
+    --paper:#0d0d0d; --surface:#1a1a19; --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --baseline:#383835; --hair:rgba(255,255,255,0.12);
+    --navy:#12203a; --navy2:#2a3f63; --accent:#3987e5;
+    --blue:#3987e5; --blue-l:#1c5cab;
+    --sev-high:#e66767; --sev-mod:#c98500; --sev-low:#0ca30c;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px 72px}
+  header.masthead{
+    background:linear-gradient(180deg,var(--navy),var(--navy2));
+    color:#fff;border-bottom:3px solid var(--accent);
+  }
+  .masthead .inner{max-width:1120px;margin:0 auto;padding:26px 28px 22px;
+    display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+  .brand-eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#b9c6de;margin:0 0 6px}
+  .brand-title{font-size:25px;font-weight:700;margin:0;letter-spacing:-.01em}
+  .brand-sub{font-size:14px;color:#cfd8e8;margin:6px 0 0;font-weight:400}
+  .status-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:8px 15px;font-size:13px;font-weight:600}
+  .dot{width:9px;height:9px;border-radius:50%;background:#37d67a;box-shadow:0 0 0 3px rgba(55,214,122,.25)}
+  .toggle{margin-top:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);
+    color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit}
+  .toggle:hover{background:rgba(255,255,255,.18)}
+  .compliance-band{background:var(--navy);color:#aeb9cf;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;text-align:center;padding:7px 12px;border-top:1px solid rgba(255,255,255,.08)}
+  section{margin-top:40px}
+  .sec-label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
+    font-weight:700;margin:0 0 4px}
+  .sec-title{font-size:19px;font-weight:700;margin:0 0 16px;letter-spacing:-.01em}
+  .lead{font-size:15.5px;color:var(--ink2);max-width:820px;margin:18px 0 0}
+  .lead strong{color:var(--ink);font-weight:600}
+  .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+  .tile{background:var(--surface);border:1px solid var(--hair);border-radius:12px;padding:18px 18px 16px;box-shadow:var(--shadow)}
+  .tile .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+  .tile .v{font-size:26px;font-weight:700;letter-spacing:-.02em;margin:0;line-height:1.1}
+  .tile .v small{font-size:14px;font-weight:600;color:var(--ink2)}
+  .tile .m{font-size:12.5px;color:var(--ink2);margin:6px 0 0}
+  .tile.accent{border-left:3px solid var(--good)}
+  .tile.accent.navy{border-left:3px solid var(--accent)}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:8px}
+  .card{background:var(--surface);border:1px solid var(--hair);border-radius:14px;padding:20px 20px 18px;box-shadow:var(--shadow)}
+  .card h3{margin:0 0 2px;font-size:15px;font-weight:700}
+  .card .cap{font-size:12.5px;color:var(--muted);margin:0 0 14px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--ink2)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .timeline{position:relative;margin-top:24px;display:grid;grid-template-columns:repeat(9,1fr);gap:0}
+  .timeline::before{content:"";position:absolute;left:5%;right:5%;top:19px;height:2px;background:var(--grid)}
+  .node{position:relative;text-align:center;padding:0 6px}
+  .node .ring{width:38px;height:38px;border-radius:50%;margin:0 auto;background:var(--surface);
+    border:2px solid var(--good);color:var(--good);display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:13px;position:relative;z-index:1;box-shadow:var(--shadow)}
+  .node.ato .ring{background:var(--navy);border-color:var(--navy);color:#fff}
+  .node .ph{font-size:10.5px;color:var(--muted);letter-spacing:.05em;margin-top:9px;text-transform:uppercase;font-weight:600}
+  .node .nm{font-size:12px;font-weight:600;margin-top:3px;line-height:1.25}
+  .node .dt{font-size:11px;color:var(--ink2);margin-top:3px;font-variant-numeric:tabular-nums}
+  table.tr{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
+  table.tr th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    font-weight:700;padding:0 12px 9px;border-bottom:1px solid var(--baseline)}
+  table.tr td{padding:11px 12px;border-bottom:1px solid var(--grid);color:var(--ink2);vertical-align:top}
+  table.tr td.thread{color:var(--ink);font-weight:600}
+  .chip{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .chip.closed{background:rgba(12,163,12,.12);color:var(--good)}
+  .chip.mon{background:rgba(37,106,191,.12);color:var(--accent)}
+  .chip.warn{background:rgba(250,178,25,.15);color:#a9760a}
+  .road{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px}
+  .road .r{background:var(--surface);border:1px solid var(--hair);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
+  .road .yr{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.06em}
+  .road .rt{font-size:14px;font-weight:600;margin:6px 0 4px}
+  .road .rd{font-size:12.5px;color:var(--ink2)}
+  .roi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+  .roi .r{text-align:center;background:var(--surface);border:1px solid var(--hair);border-radius:12px;padding:18px 10px;box-shadow:var(--shadow)}
+  .roi .rv{font-size:24px;font-weight:700;letter-spacing:-.02em}
+  .roi .rk{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:5px;font-weight:600}
+  #tt{position:fixed;pointer-events:none;opacity:0;transition:opacity .1s;background:var(--ink);color:var(--paper);
+    font-size:12px;padding:6px 9px;border-radius:6px;z-index:50;white-space:nowrap;box-shadow:var(--shadow);font-variant-numeric:tabular-nums}
+  .bar-seg{transition:opacity .12s}
+  .bar-seg:hover{opacity:.82}
+  footer{margin-top:56px;border-top:1px solid var(--baseline);padding-top:20px;font-size:12px;color:var(--muted)}
+  footer strong{color:var(--ink2)}
+  @media (max-width:860px){
+    .tiles{grid-template-columns:repeat(2,1fr)} .cards{grid-template-columns:1fr}
+    .timeline{grid-template-columns:repeat(3,1fr);gap:20px 0} .timeline::before{display:none}
+    .road,.roi{grid-template-columns:repeat(2,1fr)}
+  }
+  @media print{.toggle{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="inner">
+    <div>
+      <p class="brand-eyebrow">Advisory Team · NERC CIP Compliance Program</p>
+      <h1 class="brand-title">GridPoint Energy, Inc.</h1>
+      <p class="brand-sub">Executive Dashboard — Electric Utility NERC CIP Program · Registered Entity NCR11027 · ReliabilityFirst</p>
+    </div>
+    <div style="text-align:right">
+      <span class="status-pill"><span class="dot"></span>Good standing · Favorable audit</span>
+      <div><button class="toggle" id="themeBtn">◐ Dark mode</button></div>
+    </div>
+  </div>
+  <div class="compliance-band">Illustrative Portfolio Sample · BES Cyber System Information (BCSI) · All names &amp; figures fictional</div>
+</header>
+
+<div class="wrap">
+
+  <!-- EXEC SUMMARY -->
+  <section>
+    <p class="sec-label">Program Summary</p>
+    <h2 class="sec-title">An end-to-end NERC CIP program — from categorization to continuous compliance</h2>
+    <p class="lead">
+      GridPoint Energy categorized <strong>52 BES Cyber Systems</strong> across a <strong>44-substation</strong> footprint, built the
+      CIP-002 through CIP-014 control set, and drove <strong>34 identified gaps</strong> through <strong>9 Mitigation Plans</strong>
+      to a <strong>favorable ReliabilityFirst Compliance Audit</strong> with <strong>0 new Possible Violations</strong>. The program
+      now sustains compliance through an Internal Controls Program in <strong>good standing</strong>, and is assessed at
+      <strong>Level 4 (Managed)</strong> maturity. Residual risk is <strong>Low and stable</strong>.
+    </p>
+  </section>
+
+  <!-- KPI TILES -->
+  <section>
+    <div class="tiles">
+      <div class="tile accent navy"><p class="k">Registered Entity</p><p class="v">NCR11027</p><p class="m">GridPoint Energy · ReliabilityFirst · CIP-002–CIP-014</p></div>
+      <div class="tile"><p class="k">BES Cyber Systems</p><p class="v">52 <small>systems</small></p><p class="m">14 Medium + 38 Low · 26 EACMS · 18 PACS · 60 PCA</p></div>
+      <div class="tile accent"><p class="k">Regional audit</p><p class="v">Favorable</p><p class="m">0 new Possible Violations · report 2027-07-15</p></div>
+      <div class="tile accent"><p class="k">Residual risk</p><p class="v">Low</p><p class="m">34 gaps → 9 Mitigation Plans → 0 open violations</p></div>
+      <div class="tile accent"><p class="k">Continuous monitoring</p><p class="v">Good standing</p><p class="m">12/12 patch cycles · 4/4 access reviews · 0 overdue</p></div>
+      <div class="tile accent navy"><p class="k">Program maturity</p><p class="v">Level 4</p><p class="m">Managed · up from Level 1–2 at inception</p></div>
+    </div>
+  </section>
+
+  <!-- CHARTS -->
+  <section>
+    <p class="sec-label">Compliance Posture</p>
+    <h2 class="sec-title">Compliance burndown &amp; BES Cyber System categorization</h2>
+    <div class="cards">
+      <div class="card">
+        <h3>Compliance items by stage</h3>
+        <p class="cap">34 gaps driven through Mitigation Plans to 0 open violations, held there through ConMon.</p>
+        <svg id="riskChart" viewBox="0 0 560 300" role="img" aria-label="Stacked column chart of compliance items across program stages"></svg>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--sev-high)"></i>PNC / significant</span>
+          <span><i class="sw" style="background:var(--sev-mod)"></i>Moderate / Area of Concern</span>
+          <span><i class="sw" style="background:var(--sev-low)"></i>Low / self-logged</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>BES Cyber System categorization (CIP-002)</h3>
+        <p class="cap">52 systems rated by impact — the foundation every downstream control inherits.</p>
+        <svg id="implChart" viewBox="0 0 560 132" role="img" aria-label="Stacked bar of BES Cyber System categorization"></svg>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--navy)"></i>Medium · 14</span>
+          <span><i class="sw" style="background:var(--blue)"></i>Low · 38</span>
+          <span><i class="sw" style="background:var(--muted)"></i>High · 0</span>
+        </div>
+        <h3 style="margin-top:22px">Program maturity by domain</h3>
+        <p class="cap">5-level capability model (1 Initial → 5 Optimizing) · overall Level 4 (Managed).</p>
+        <svg id="costChart" viewBox="0 0 560 200" role="img" aria-label="Horizontal bar chart of maturity by CIP domain"></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOURNEY -->
+  <section>
+    <p class="sec-label">The Nine-Phase Journey</p>
+    <h2 class="sec-title">From functional registration to continuous compliance</h2>
+    <div class="timeline">
+      <div class="node"><div class="ring">01</div><div class="ph">Foundation</div><div class="nm">Program Foundation</div><div class="dt">2025–26</div></div>
+      <div class="node"><div class="ring">02</div><div class="ph">Categorize</div><div class="nm">BCS (CIP-002)</div><div class="dt">2026</div></div>
+      <div class="node"><div class="ring">03</div><div class="ph">Govern</div><div class="nm">Policies &amp; People</div><div class="dt">2026</div></div>
+      <div class="node"><div class="ring">04</div><div class="ph">Implement</div><div class="nm">Controls</div><div class="dt">2026–27</div></div>
+      <div class="node"><div class="ring">05</div><div class="ph">Assess</div><div class="nm">Internal (34 gaps)</div><div class="dt">2027</div></div>
+      <div class="node"><div class="ring">06</div><div class="ph">Remediate</div><div class="nm">Mitigation (9)</div><div class="dt">2027</div></div>
+      <div class="node ato"><div class="ring">07</div><div class="ph">Audit</div><div class="nm">Favorable · 0 PV</div><div class="dt">2027-07</div></div>
+      <div class="node"><div class="ring">08</div><div class="ph">Monitor</div><div class="nm">ConMon (ICP)</div><div class="dt">2027–28</div></div>
+      <div class="node"><div class="ring">09</div><div class="ph">Report</div><div class="nm">Executive · L4</div><div class="dt">2028</div></div>
+    </div>
+  </section>
+
+  <!-- TRACEABILITY -->
+  <section>
+    <p class="sec-label">Cross-Phase Traceability</p>
+    <h2 class="sec-title">Every material item traced from discovery to monitoring</h2>
+    <table class="tr">
+      <thead><tr><th>Compliance thread</th><th>Assessment</th><th>Mitigation</th><th>Audit</th><th>Continuous Monitoring</th></tr></thead>
+      <tbody>
+        <tr><td class="thread">CIP-007 R2 patch cycle</td><td>Gap found</td><td>Mitigation Plan</td><td><span class="chip closed">Accepted</span></td><td><span class="chip mon">12/12 at 100%</span></td></tr>
+        <tr><td class="thread">CIP-014 Northgate physical</td><td>Risk noted</td><td>Assessment scheduled</td><td><span class="chip warn">Area of Concern</span></td><td><span class="chip closed">Completed + verified</span></td></tr>
+        <tr><td class="thread">CIP-013 supply chain</td><td>Vendor-risk gap</td><td>MIT-05 amendments</td><td><span class="chip closed">Closed</span></td><td><span class="chip mon">Ongoing vendor reviews</span></td></tr>
+        <tr><td class="thread">CIP-004 access reviews</td><td>Process gap</td><td>Standardized</td><td><span class="chip closed">Satisfied</span></td><td><span class="chip mon">4/4 quarterly</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- CONMON METRICS -->
+  <section>
+    <p class="sec-label">Continuous Monitoring — Year 1 (2027-Q3 → 2028-Q2)</p>
+    <h2 class="sec-title">Operating compliance every day between audits</h2>
+    <div class="roi">
+      <div class="r"><div class="rv">12/12</div><div class="rk">Patch cycles · 100%</div></div>
+      <div class="r"><div class="rv">40</div><div class="rk">Internal control tests</div></div>
+      <div class="r"><div class="rv">3</div><div class="rk">Self-logged exceptions</div></div>
+      <div class="r"><div class="rv">0</div><div class="rk">Possible Violations</div></div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section>
+    <p class="sec-label">Forward Roadmap</p>
+    <h2 class="sec-title">Sustaining and advancing the program (Managed → Optimizing)</h2>
+    <div class="road">
+      <div class="r"><div class="yr">Year 1</div><div class="rt">Evidence automation</div><div class="rd">Automate continuous evidence collection via a dedicated platform.</div></div>
+      <div class="r"><div class="yr">Year 1</div><div class="rt">CIP-013 to Level 4</div><div class="rd">Mature the supply-chain program; expand OT monitoring &amp; CIP-012 posture.</div></div>
+      <div class="r"><div class="yr">Year 2</div><div class="rt">Predictive metrics</div><div class="rd">Predictive compliance metrics &amp; IT/OT convergence governance.</div></div>
+      <div class="r"><div class="yr">~2030</div><div class="rt">Next RF audit prep</div><div class="rd">Prepare the next audit cycle; watch item CIP-015 (INSM).</div></div>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong>GridPoint Energy, Inc.</strong> (NCR11027) — Electric Utility NERC CIP Compliance Program · 9 phases · 130+ documents.
+    Regional Entity: ReliabilityFirst · CIP Senior Manager: Daniel Reyes · Compliance Manager / ICP Owner: Karen Whitfield.</p>
+    <p>Prepared by the Advisory Team. This is an illustrative portfolio sample; all organizations, individuals, systems, dates, and figures are fictional and do not represent a real registered entity or a real NERC CIP audit. Standards referenced: NERC CIP-002 through CIP-014, the CMEP, and RSAW methodology.</p>
+  </footer>
+</div>
+
+<div id="tt"></div>
+<script>
+(function(){
+  var NS="http://www.w3.org/2000/svg";
+  var tt=document.getElementById('tt');
+  function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+  function el(tag,attrs){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);return e;}
+  function show(evt,html){tt.innerHTML=html;tt.style.opacity=1;move(evt);}
+  function move(evt){tt.style.left=(evt.clientX+14)+'px';tt.style.top=(evt.clientY-10)+'px';}
+  function hide(){tt.style.opacity=0;}
+  function bind(node,html){node.addEventListener('mousemove',function(e){show(e,html);});node.addEventListener('mouseleave',hide);}
+
+  // ---------- Compliance burndown (stacked columns) ----------
+  function riskChart(){
+    var svg=document.getElementById('riskChart');if(!svg)return;svg.innerHTML='';
+    var W=560,H=300,padL=34,padB=48,padT=26,plotH=H-padB-padT,plotW=W-padL-20;
+    var stages=[
+      {n:'Assessment',h:9,m:13,l:12},
+      {n:'Mitigation',h:9,m:0,l:0},
+      {n:'Audit',h:0,m:1,l:0},
+      {n:'ConMon Y1',h:0,m:0,l:3}
+    ];
+    var max=34, unit=plotH/max;
+    var colH=css('--sev-high'),colM=css('--sev-mod'),colL=css('--sev-low');
+    [0,9,17,26,34].forEach(function(g){
+      var y=padT+plotH-g*unit;
+      svg.appendChild(el('line',{x1:padL,y1:y,x2:padL+plotW,y2:y,stroke:css('--grid'),'stroke-width':1}));
+      var t=el('text',{x:padL-7,y:y+4,'text-anchor':'end','font-size':11,fill:css('--muted')});t.textContent=g;svg.appendChild(t);
+    });
+    var bw=54, gap=(plotW-bw*stages.length)/(stages.length);
+    stages.forEach(function(s,i){
+      var x=padL+gap/2+i*(bw+gap), yb=padT+plotH;
+      var segs=[['Low / self-logged',s.l,colL],['Moderate / AoC',s.m,colM],['PNC / significant',s.h,colH]];
+      var cy=yb;
+      segs.forEach(function(sg){
+        if(sg[1]<=0)return;
+        var hgt=sg[1]*unit; cy-=hgt;
+        var r=el('rect',{x:x,y:cy,width:bw,height:Math.max(hgt-2,1),rx:3,fill:sg[2],class:'bar-seg'});
+        bind(r,'<b>'+s.n+'</b> · '+sg[0]+': '+sg[1]);
+        svg.appendChild(r);
+      });
+      var total=s.h+s.m+s.l;
+      var tot=el('text',{x:x+bw/2,y:cy-7,'text-anchor':'middle','font-size':12,'font-weight':700,fill:css('--ink')});tot.textContent=total;svg.appendChild(tot);
+      var lbl=el('text',{x:x+bw/2,y:H-28,'text-anchor':'middle','font-size':11.5,fill:css('--ink2')});lbl.textContent=s.n;svg.appendChild(lbl);
+      var pv=el('text',{x:x+bw/2,y:H-14,'text-anchor':'middle','font-size':10.5,fill:css('--good'),'font-weight':600});pv.textContent='0 PV';svg.appendChild(pv);
+    });
+    svg.appendChild(el('line',{x1:padL,y1:padT+plotH,x2:padL+plotW,y2:padT+plotH,stroke:css('--baseline'),'stroke-width':1}));
+  }
+
+  // ---------- Categorization (100% stacked bar) ----------
+  function implChart(){
+    var svg=document.getElementById('implChart');if(!svg)return;svg.innerHTML='';
+    var W=560,barY=34,barH=46,padX=4,plotW=W-padX*2,total=52;
+    var data=[['Medium',14,css('--navy')],['Low',38,css('--blue')]];
+    var x=padX;
+    data.forEach(function(d,i){
+      var w=d[1]/total*plotW;
+      var r=el('rect',{x:x,y:barY,width:Math.max(w-(i<data.length-1?2:0),2),height:barH,rx:5,fill:d[2],class:'bar-seg'});
+      bind(r,'<b>'+d[0]+' impact</b>: '+d[1]+' ('+Math.round(d[1]/total*100)+'%)');
+      svg.appendChild(r);
+      if(w>52){var t=el('text',{x:x+10,y:barY+barH/2+1,'font-size':13,'font-weight':700,fill:'#fff','dominant-baseline':'middle'});t.textContent=d[1];svg.appendChild(t);}
+      x+=w;
+    });
+    var pct=el('text',{x:padX,y:20,'font-size':12.5,fill:css('--ink2')});pct.textContent='52 BES Cyber Systems';svg.appendChild(pct);
+    var pr=el('text',{x:W-padX,y:20,'text-anchor':'end','font-size':12.5,fill:css('--ink2')});pr.textContent='0 High impact';svg.appendChild(pr);
+  }
+
+  // ---------- Maturity by domain (horizontal bars, single hue) ----------
+  function costChart(){
+    var svg=document.getElementById('costChart');if(!svg)return;svg.innerHTML='';
+    var W=560,rowH=34,padT=6,labelW=210,plotW=W-labelW-40,max=5,blue=css('--blue');
+    var data=[['Governance & Policy',4],['Access Mgmt (CIP-004)',4],['Systems Security (05/07)',4],['Physical (CIP-006/014)',4],['Supply Chain (CIP-013)',3.5],['Incident & Recovery',3.5]];
+    data.forEach(function(d,i){
+      var y=padT+i*rowH;
+      var lb=el('text',{x:0,y:y+rowH/2+1,'font-size':12,fill:css('--ink2'),'dominant-baseline':'middle'});lb.textContent=d[0];svg.appendChild(lb);
+      var w=d[1]/max*plotW;
+      var bg=el('rect',{x:labelW,y:y+6,width:plotW,height:rowH-16,rx:4,fill:css('--grid')});svg.appendChild(bg);
+      var r=el('rect',{x:labelW,y:y+6,width:Math.max(w,3),height:rowH-16,rx:4,fill:blue,class:'bar-seg'});
+      bind(r,'<b>'+d[0]+'</b>: Level '+d[1]+' / 5');svg.appendChild(r);
+      var v=el('text',{x:W,y:y+rowH/2+1,'text-anchor':'end','font-size':12.5,'font-weight':700,fill:css('--ink'),'dominant-baseline':'middle'});v.textContent='L'+d[1];svg.appendChild(v);
+    });
+  }
+
+  function renderAll(){riskChart();implChart();costChart();}
+  renderAll();
+
+  var btn=document.getElementById('themeBtn');
+  btn.addEventListener('click',function(){
+    var cur=document.documentElement.getAttribute('data-theme');
+    var nxt=cur==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',nxt);
+    btn.textContent=nxt==='dark'?'◐ Light mode':'◐ Dark mode';
+    renderAll();
+  });
+  window.addEventListener('resize',function(){clearTimeout(window._rz);window._rz=setTimeout(renderAll,150);});
+})();
+</script>
+</body>
+</html>
